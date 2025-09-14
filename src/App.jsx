@@ -3,6 +3,7 @@
 // useState = lets us create "state" (memory variables)
 // useEffect = lets us run code at certain times (like componentDidMount)
 import React, { useEffect, useState } from 'react';
+import {useDebounce} from 'react-use'
 
 // 🔹 Import our Search component (capital S!)
 // This is our custom search bar component
@@ -55,6 +56,9 @@ const App = () => {
   // setIsLoading = function to update loading state
   const [isLoading, setIsLoading] = useState(false);
 
+
+  const [debounceSearchTerm,setDebouncedSearchTerm]=useState('')
+
   // =======================
   // 🔹 Function to fetch movies from TMDB
   // =======================
@@ -96,6 +100,9 @@ const App = () => {
       setIsLoading(false); // stop loading spinner
     }
   };
+
+
+  useDebounce(()=>setDebouncedSearchTerm(searchTerm),500,[searchTerm])
 
   // =======================
   // 🔹 useEffect → run code when component loads
