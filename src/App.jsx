@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 // This is our custom search bar component
 import Search from './components/search';
 import { Spinner } from './components/spinner';
+import MoiveCard from './components/MoiveCard';
 
 // =======================
 // 🔹 API Setup for TMDB
@@ -57,7 +58,7 @@ const App = () => {
   // =======================
   // 🔹 Function to fetch movies from TMDB
   // =======================
-  const fetchMovies = async () => {
+  const fetchMovies = async (query='') => {
     setIsLoading(true);    // start loading spinner
     setErrorMessage('');   // reset any old errors
 
@@ -65,7 +66,10 @@ const App = () => {
       // Build API endpoint URL
       // /discover/movie → endpoint to get list of movies
       // ?sort_by=popularity.desc → sort movies by popularity
-      const endpoint = `${API_BASE_URL}/discover/movie?sort_by=popularity.desc`;
+      const endpoint = query
+      ? `${API_BASE_URL}/search/movie?query=${encodeURIComponent(query)}`
+      
+      :`${API_BASE_URL}/discover/movie?sort_by=popularity.desc`;
 
       // fetch() → call API, wait for response
       const response = await fetch(endpoint, API_OPTIONS);
@@ -97,8 +101,8 @@ const App = () => {
   // 🔹 useEffect → run code when component loads
   // =======================
   useEffect(() => {
-    fetchMovies(); // call fetchMovies once on page load
-  }, []); // empty array = run only once
+    fetchMovies(searchTerm); // call fetchMovies once on page load
+  }, [searchTerm]); // empty array = run only once
 
   // =======================
   // 🔹 JSX → UI layout
@@ -139,12 +143,14 @@ const App = () => {
             <p className="text-red-500">{errorMessage}</p>
           ) : (
             // Otherwise show movie list
-            <ul>
+            <ul className="grid gap-6 
+                sm:grid-cols-2 
+                md:grid-cols-3 
+                lg:grid-cols-4 
+                xl:grid-cols-5">
               {movieList.map((movie) => (
                 // Each movie gets a unique key = movie.id
-                <li key={movie.id} className="text-white">
-                  {movie.title} {/* Show movie title */}
-                </li>
+                <MoiveCard key={movie.id} movie={movie}/>
               ))}
             </ul>
           )}
