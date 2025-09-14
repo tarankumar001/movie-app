@@ -1,170 +1,170 @@
-// 🔹 Import React and the Hooks we need
-// React = main library, useState = lets us make "memory variables", useEffect = run code at certain times
+// 🔹 Import React + Hooks we need
+// React = main library for building UI
+// useState = lets us create "state" (memory variables)
+// useEffect = lets us run code at certain times (like componentDidMount)
 import React, { useEffect, useState } from 'react';
 
-// 🔹 Import our Search component (must start with capital S)
+// 🔹 Import our Search component (capital S!)
+// This is our custom search bar component
 import Search from './components/search';
+import { Spinner } from './components/spinner';
 
 // =======================
-// 🔹 API Setup (for TMDB)
+// 🔹 API Setup for TMDB
 // =======================
 
-// Base URL of TheMovieDB API (every request starts with this)
+// Base URL for TMDB API (every API call starts with this)
 const API_BASE_URL = 'https://api.themoviedb.org/3';
 
-// API Key (we keep it safe inside .env file so it’s not hardcoded here)
+// Our secret TMDB API token (stored in .env so it's not public)
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 
-// Options for fetch request
-// method: 'GET' means we are "getting data"
-// headers: tell the API we want JSON format (not XML, HTML, etc.)
+// Options for fetch API call
+// method = GET → we want to "get" data from server
+// headers → tell API we accept JSON + give authorization token
 const API_OPTIONS = {
   method: 'GET',
   headers: {
     accept: 'application/json',
-        Authorization: `Bearer ${API_KEY}`,
+    Authorization: `Bearer ${API_KEY}`, // ✅ Pass token to TMDB
   },
 };
 
 // =======================
-// 🔹 Our Main Component
+// 🔹 Main App Component
 // =======================
-
-// App = the main component (like the root of our app)
 const App = () => {
   // =======================
-  // 🔹 State variables (React memory)
+  // 🔹 STATE VARIABLES
   // =======================
 
-  // searchTerm = what user typed in search box (the notepad)
-  // setSearchTerm = function (the pen) to update the notepad
-  // default value = empty string ""
+  // searchTerm = text typed in search bar
+  // setSearchTerm = function to change searchTerm
   const [searchTerm, setSearchTerm] = useState('');
 
-  // movies = list of movies we fetch from API
-  // setMovies = function to update that list
-  // default = empty array [] (no movies at start)
-  const [movies, setMovies] = useState([]);
+  // movieList = array of movies we fetch from API
+  // setMovieList = function to update movieList
+  const [movieList, setMovieList] = useState([]);
 
-  // errorMessage = if something goes wrong, we save the message here
-  // setErrorMessage = update function
-  // default = "" (no error at start)
+  // errorMessage = if API fails, store message here
+  // setErrorMessage = function to update error message
   const [errorMessage, setErrorMessage] = useState('');
 
-  // =======================
-  // 🔹 Function to fetch movies
-  // =======================
+  // isLoading = true/false while API is fetching
+  // setIsLoading = function to update loading state
+  const [isLoading, setIsLoading] = useState(false);
 
-  // async = means we can use "await" inside (wait for fetch to finish)
+  // =======================
+  // 🔹 Function to fetch movies from TMDB
+  // =======================
   const fetchMovies = async () => {
-    try {
-      // endpoint = the exact API URL we will call
-      // /discover/movie?sort_by=popularity.desc → sort movies by popularity
-      // &api_key=${API_KEY} → add your personal key to unlock the API
-      const endpoint = `${API_BASE_URL}/discover/movie?sor_by=popularity.desc&api_key=${API_KEY}`;
+    setIsLoading(true);    // start loading spinner
+    setErrorMessage('');   // reset any old errors
 
-      // fetch() = function to call API
-      // API_OPTIONS = we defined above (GET + headers)
-      // await = wait for API response to come back
+    try {
+      // Build API endpoint URL
+      // /discover/movie → endpoint to get list of movies
+      // ?sort_by=popularity.desc → sort movies by popularity
+      const endpoint = `${API_BASE_URL}/discover/movie?sort_by=popularity.desc`;
+
+      // fetch() → call API, wait for response
       const response = await fetch(endpoint, API_OPTIONS);
 
-      // If API gives a bad response (not 200 OK), throw an error
+      // If response is not OK (status not 200), throw error
       if (!response.ok) {
         throw new Error('Failed to fetch movies');
       }
 
-      // Convert the raw response into JSON (JavaScript object)
+      // Convert raw response into JS object
       const data = await response.json();
-      console.log(data)
 
-      // data.results = list of movies from TMDB
-      // // Save them into "movies" state (so React re-renders with movies)
-      // setMovies(data.results);
+      console.log(data); // log data to console for debugging
 
-      // // Reset error message (if last time it failed, now it's fine)
-      // setErrorMessage('');
-      if(data.Response=="False"){
-        setErrorMessage(data.Error ||"Failed to fetch movies")
-      }
+      // Save movies into state (so React re-renders UI)
+      setMovieList(data.results || []);
+
     } catch (error) {
-      // If something breaks (like no internet), show error in console
+      // If something went wrong, log in console
       console.error(`Error fetching movies: ${error}`);
-
-      // Also save error message into state → user will see it
+      // Show user-friendly error message
       setErrorMessage('Could not load movies. Try again later.');
+    } finally {
+      setIsLoading(false); // stop loading spinner
     }
   };
 
   // =======================
-  // 🔹 useEffect (side effect hook)
+  // 🔹 useEffect → run code when component loads
   // =======================
-
-  // useEffect runs code automatically when the component loads
-  // [] = empty array → means "run once at the beginning only"
   useEffect(() => {
-    fetchMovies(); // call our function when app starts
-  }, []);
+    fetchMovies(); // call fetchMovies once on page load
+  }, []); // empty array = run only once
 
   // =======================
-  // 🔹 Return JSX (UI of our app)
+  // 🔹 JSX → UI layout
   // =======================
   return (
     <main>
-      {/* background pattern (just styling) */}
+      {/* background pattern (styling) */}
       <div className="pattern" />
 
-      {/* wrapper = container for the page */}
+      {/* wrapper = main container for content */}
       <div className="wrapper">
-
-        {/* HEADER */}
+        {/* HEADER section */}
         <header>
-          {/* Hero image (banner at the top) */}
+          {/* Hero banner image */}
           <img src="./hero.png" alt="Hero Banner" />
 
-          {/* Main heading of the page */}
+          {/* Main heading */}
           <h1>
             Find <span className="text-gradient">Movies</span> You'll Enjoy without the Hassle
           </h1>
 
-          {/* Search bar component
-              - We give it "searchTerm" (what’s in the notepad)
-              - And "setSearchTerm" (the pen to update the notepad) */}
+          {/* Search component */}
+          {/* Pass searchTerm + setSearchTerm to component */}
           <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         </header>
 
         {/* MOVIES SECTION */}
         <section>
           {/* Sub-heading */}
-          <h2 className="all-movies">All Movies</h2>
+          <h2 className="mt-[40px]">All Movies</h2>
 
-          {/* If there's an error message, show it in red text */}
-          {errorMessage && <p className="text-red-500">{errorMessage}</p>}
-
-          {/* Show movies if they exist */}
-          <ul>
-            {/* Loop through movies array
-                - movie = current movie object
-                - movie.id = unique key (React needs this)
-                - movie.title = the movie name */}
-            {movies.map((movie) => (
-              <li key={movie.id}>{movie.title}</li>
-            ))}
-          </ul>
+          {/* Conditional rendering */}
+          {isLoading ? (
+            // Show loading text while fetching
+            <Spinner/>
+          ) : errorMessage ? (
+            // Show error if fetch fails
+            <p className="text-red-500">{errorMessage}</p>
+          ) : (
+            // Otherwise show movie list
+            <ul>
+              {movieList.map((movie) => (
+                // Each movie gets a unique key = movie.id
+                <li key={movie.id} className="text-white">
+                  {movie.title} {/* Show movie title */}
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         {/*
-          🔹 Bro Summary of Hooks:
-          - useState = notepad + pen (memory for values)
-          - searchTerm = what you typed
-          - setSearchTerm = pen to change it
-          - movies = list of movies from API
-          - errorMessage = what to show if fetch fails
-          - useEffect = runs code when app loads (fetch movies)
+          🔹 Bro summary:
+          - useState = notepad + pen
+          - searchTerm = typed text
+          - setSearchTerm = pen to update typed text
+          - movieList = array of movies
+          - errorMessage = store error if fetch fails
+          - isLoading = true/false while fetching
+          - useEffect = run code on component load
+          - fetchMovies = function to get movies from TMDB
         */}
       </div>
     </main>
   );
 };
 
-// Finally export App so React can use it
+// 🔹 Export App so React can render it
 export default App;
